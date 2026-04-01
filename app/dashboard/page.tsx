@@ -1,6 +1,48 @@
 "use client";
 
+import { authStorage } from "@/lib/auth-storage";
+import { authService } from "@/lib/services/auth-service";
+import { currentUser } from "@/lib/types/auth.types";
+import { useRouter } from "next/navigation";
+import {  useEffect, useState } from "react";
+
 export default function DashboardPage() {
+
+  const [user, setUser] = useState<currentUser | null>(null);
+  const [loading,setLoading] = useState(false);
+
+  const router = useRouter()
+
+  useEffect(()=>{
+    const currenUser = async () =>{
+      try{
+        const token = authStorage.getToken();
+        if(token){
+          const res = await authService.getCurrentUser(token);
+          // console.log("Current User:", res.data);
+          setUser(res.data);
+        }else{
+          router.push("/login");
+        }
+      }catch(err){
+        // console.log("Error fetching current user:", err);
+        authStorage.removeToken();
+        router.push("/login");
+      }finally{
+        setLoading(false);
+      }
+    };
+    currenUser();
+  },[])
+
+  if(loading){
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-lg font-medium text-slate-700">Loading...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-6xl">
@@ -8,11 +50,16 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Welcome back. Here is your overview.
+              Welcome back , {user?.name || "User"}
             </p>
           </div>
 
-          <button className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 transition">
+          <button
+          onClick={()=>{
+            authStorage.removeToken()
+            router.push("/login")
+          }}
+           className="rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 transition">
             Logout
           </button>
         </div>
@@ -21,18 +68,22 @@ export default function DashboardPage() {
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
             <p className="text-sm text-slate-500">User Name</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-900">
-              Auishi Saha
+              {user?.name || "N/A"}
             </h2>
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
             <p className="text-sm text-slate-500">Role</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">USER</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">
+              {user?.role || "N/A"}
+            </h2>
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
             <p className="text-sm text-slate-500">Meters Count</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">0</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-900">
+              {user?.metersCount || 0}
+            </h2>
           </div>
         </div>
 
@@ -43,15 +94,11 @@ export default function DashboardPage() {
             <div className="mt-4 space-y-3 text-sm text-slate-600">
               <p>
                 <span className="font-semibold text-slate-800">Phone:</span>{" "}
-                +8801765789787
+                {user?.phone || "N/A"}
               </p>
               <p>
                 <span className="font-semibold text-slate-800">Created At:</span>{" "}
-                2026-03-11
-              </p>
-              <p>
-                <span className="font-semibold text-slate-800">Status:</span>{" "}
-                Active
+                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
               </p>
             </div>
           </div>

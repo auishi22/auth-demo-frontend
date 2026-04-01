@@ -27,14 +27,15 @@ export type currentUser = {
   name: string;
   role: UserRole;
   metersCount: number;
+  createdAt: string;
 };
 
-export type CurrentUserApiResponse = {
+export type currentUserApiResponse = {
   success: boolean;
   data: currentUser;
 };
 
-export type AuthStateUser = {
+export type authStateUser = {
   token: string;
   role: UserRole;
   user: currentUser;

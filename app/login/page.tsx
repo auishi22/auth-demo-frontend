@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-
-
 export default function LoginPage() {
   const {
     register,
@@ -18,29 +16,31 @@ export default function LoginPage() {
   const router = useRouter();
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (loginData: loginPayload) => {
-     try{
+    setError("");
+    setLoading(true);
+    try {
       const res = await authService.login({
-      phone : loginData.phone,
-      password : loginData.password
-     }) 
+        phone: loginData.phone,
+        password: loginData.password,
+      });
 
-    //  save token in lacalStorage
-    // console.log(res.data.token);
-    const token = res.data.token;
-    authStorage.setToken(token);
-    router.push("/dashboard");
-     }catch(err){
+      //  save token in lacalStorage
+      // console.log(res.data.token);
+      const token = res.data.token;
+      authStorage.setToken(token);
+      router.push("/dashboard");
+    } catch (err: unknown) {
       // console.log("uuuuuuuuuu",err.response?.data?.message);
-      if(err.response?.data?.message){
-        setError(err.response.data.message);
+      if (err instanceof Error) {
+        setError(err.message);
       }
-
-     }
-
+    } finally {
+      setLoading(false);
+    }
   };
-console.log(error)
   return (
     <main className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 p-8">
@@ -97,9 +97,7 @@ console.log(error)
             Login
           </button>
           {/* Error message display */}
-          {error && (
-            <p className="text-xs text-red-500 mt-2">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
         </form>
       </div>
     </main>
