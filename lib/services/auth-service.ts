@@ -1,4 +1,3 @@
-import { api } from "../api";
 import { fetcher } from "../fetcher";
 import { currentUserApiResponse, loginPayload, loginResponse } from "../types/auth.types";
 

@@ -3,39 +3,39 @@
 import { authStorage } from "@/lib/auth-storage";
 import { authService } from "@/lib/services/auth-service";
 import { currentUser } from "@/lib/types/auth.types";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
-
   const [user, setUser] = useState<currentUser | null>(null);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const router = useRouter()
+  const router = useRouter();
 
-  useEffect(()=>{
-    const currenUser = async () =>{
-      try{
+  useEffect(() => {
+    const currenUser = async () => {
+      try {
         const token = authStorage.getToken();
-        if(token){
+        if (token) {
           const res = await authService.getCurrentUser(token);
           // console.log("Current User:", res.data);
           setUser(res.data);
-        }else{
+        } else {
           router.push("/login");
         }
-      }catch(err){
+      } catch (err) {
         // console.log("Error fetching current user:", err);
         authStorage.removeToken();
         router.push("/login");
-      }finally{
+      } finally {
         setLoading(false);
       }
     };
     currenUser();
-  },[])
+  }, []);
 
-  if(loading){
+  if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <p className="text-lg font-medium text-slate-700">Loading...</p>
@@ -55,11 +55,12 @@ export default function DashboardPage() {
           </div>
 
           <button
-          onClick={()=>{
-            authStorage.removeToken()
-            router.push("/login")
-          }}
-           className="rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 transition">
+            onClick={() => {
+              authStorage.removeToken();
+              router.push("/login");
+            }}
+            className="rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 transition"
+          >
             Logout
           </button>
         </div>
@@ -97,8 +98,12 @@ export default function DashboardPage() {
                 {user?.phone || "N/A"}
               </p>
               <p>
-                <span className="font-semibold text-slate-800">Created At:</span>{" "}
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                <span className="font-semibold text-slate-800">
+                  Created At:
+                </span>{" "}
+                {user?.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString()
+                  : "N/A"}
               </p>
             </div>
           </div>
@@ -111,9 +116,11 @@ export default function DashboardPage() {
                 View Profile
               </button>
 
-              <button className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-300 transition">
-                View Meters
-              </button>
+              <Link href="/dashboard/meter">
+                <button className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-300 transition">
+                  View Meters
+                </button>
+              </Link>
 
               <button className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-300 transition">
                 Settings
