@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
+import { MeterCreatePayload } from "@/lib/types/meter.types";
+import { useCreateMeter } from "@/lib/hooks/useMeter";
 
 interface CreateMeterModalProps {
   open: boolean;
@@ -22,11 +23,35 @@ export default function MeterAddForm({ open, setOpen }: CreateMeterModalProps) {
     register,
     handleSubmit,
     watch,
-    formState: { errors },
-  } = useForm();
-  const lowBalanceAlert = watch("lowBalanceAlert");
+    reset: resetForm,
+  } = useForm<MeterCreatePayload>();
 
-  const onSubmit = (data) => {
+  const {
+    mutate: createMeter,
+    isPending,
+    error,
+    reset: resetCreateMeter,
+  } = useCreateMeter();
+
+  const onSubmit = (data: MeterCreatePayload) => {
+    resetCreateMeter();
+
+    const payload: MeterCreatePayload = {
+      meterName: data.meterName,
+      accountNo: data.accountNo,
+      meterNo: data.meterNo,
+      meterType: data.meterType,
+      thresholdAmount: data.thresholdAmount || 0,
+      isDailyConsumptionAlertEnabled:
+        data.isDailyConsumptionAlertEnabled || false,
+      isLowBalanceAlertEnabled: data.isLowBalanceAlertEnabled || false,
+    };
+    createMeter(payload, {
+      onSuccess: () => {
+        setOpen(false);
+        resetForm();
+      },
+    });
     console.log("Form Data:", data);
   };
 
@@ -41,13 +66,13 @@ export default function MeterAddForm({ open, setOpen }: CreateMeterModalProps) {
         {/* Form */}
         <form className="space-y-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
           {/* Meter Name */}
-          <div>
+          <div className="space-y-2">
             <Label>Meter Name</Label>
             <Input {...register("meterName")} placeholder="Enter meter name" />
           </div>
 
           {/* Account No */}
-          <div>
+          <div className="space-y-2">
             <Label>Account No</Label>
             <Input
               {...register("accountNo", { required: true })}
@@ -57,7 +82,7 @@ export default function MeterAddForm({ open, setOpen }: CreateMeterModalProps) {
           </div>
 
           {/* Meter No */}
-          <div>
+          <div className="space-y-2">
             <Label>Meter No</Label>
             <Input
               {...register("meterNo", { required: true })}
@@ -66,7 +91,7 @@ export default function MeterAddForm({ open, setOpen }: CreateMeterModalProps) {
           </div>
 
           {/* Meter Type */}
-          <div>
+          <div className="space-y-2">
             <Label>Meter Type</Label>
             <select
               {...register("meterType")}
@@ -87,10 +112,10 @@ export default function MeterAddForm({ open, setOpen }: CreateMeterModalProps) {
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              id="dailyConsumptionAlert"
-              {...register("dailyConsumptionAlert")}
+              id="isDailyConsumptionAlertEnabled"
+              {...register("isDailyConsumptionAlertEnabled")}
             />
-            <Label htmlFor="dailyConsumptionAlert">
+            <Label htmlFor="isDailyConsumptionAlertEnabled">
               Daily Consumption Alert
             </Label>
           </div>
@@ -98,16 +123,16 @@ export default function MeterAddForm({ open, setOpen }: CreateMeterModalProps) {
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              id="lowBalanceAlert"
-              {...register("lowBalanceAlert")}
+              id="isLowBalanceAlertEnabled"
+              {...register("isLowBalanceAlertEnabled")}
             />
-            <Label htmlFor="lowBalanceAlert">Low Balance Alert</Label>
+            <Label htmlFor="isLowBalanceAlertEnabled">Low Balance Alert</Label>
           </div>
-          {lowBalanceAlert && (
+          { watch("isLowBalanceAlertEnabled") && (
             <div>
               <Label>Threshold Amount</Label>
               <Input
-                {...register("threshold")}
+                {...register("thresholdAmount")}
                 type="number"
                 placeholder="Enter threshold"
               />
@@ -119,13 +144,22 @@ export default function MeterAddForm({ open, setOpen }: CreateMeterModalProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                resetCreateMeter();
+                resetForm();
+                setOpen(false);
+              }}
             >
               Cancel
             </Button>
 
-            <Button type="submit">Create Meter</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Creating..." : "Create Meter"}
+            </Button>
           </div>
+          {error && (
+            <p className="text-xs text-red-500 text-right">{error.message}</p>
+          )}
         </form>
       </DialogContent>
     </Dialog>
