@@ -1,17 +1,38 @@
 "use client";
 
+import { useState } from "react";
+import MeterEditForm from "@/app/dashboard/meter/_components/MeterEditForm";
+import DeleteActionButton from "@/components/action-buttons/DeleteActionButton";
+import EditActionButton from "@/components/action-buttons/EditActionButton";
 import { Button } from "@/components/ui/button";
-import { useSingleMeter } from "@/lib/hooks/useMeter";
-import { Pencil, Trash2 } from "lucide-react";
+import { useDeleteMeter, useSingleMeter } from "@/lib/hooks/useMeter";
 import { useParams, useRouter } from "next/navigation";
 
 export default function MeterDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const meterId = params.meterId as string;
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const { data: meter, isLoading, error } = useSingleMeter(meterId);
+  const { mutate: deleteMeter, isPending: isDeleting } = useDeleteMeter();
   console.log(meter);
+
+  const handleDeleteMeter = () => {
+    if (!meterId || isDeleting) return;
+
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this meter?",
+    );
+
+    if (!isConfirmed) return;
+
+    deleteMeter(meterId, {
+      onSuccess: () => {
+        router.push("/dashboard/meter");
+      },
+    });
+  };
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
@@ -29,22 +50,18 @@ export default function MeterDetailsPage() {
           {/* Right Actions */}
           <div className="flex items-center gap-2">
             {/* Edit */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 hover:text-blue-600"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
+            <EditActionButton
+              onClick={() => setIsEditOpen(true)}
+              disabled={!meter || isLoading}
+              aria-label="Edit meter"
+            />
 
             {/* Delete */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 border hover:text-red-600"
-            >
-              <Trash2 className="w-4 h-4 " />
-            </Button>
+            <DeleteActionButton
+              onClick={handleDeleteMeter}
+              disabled={isLoading || !meter || isDeleting}
+              aria-label="Delete meter"
+            />
           </div>
         </div>
 
@@ -137,6 +154,12 @@ export default function MeterDetailsPage() {
           )}
         </div>
       </div>
+
+      <MeterEditForm
+        open={isEditOpen}
+        setOpen={setIsEditOpen}
+        meterData={meter ?? null}
+      />
     </main>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/ui/spinner";
 import { authStorage } from "@/lib/auth-storage";
 import { authService } from "@/lib/services/auth-service";
 import { currentUser } from "@/lib/types/auth.types";
@@ -9,7 +10,7 @@ import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<currentUser | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const router = useRouter();
 
@@ -24,7 +25,7 @@ export default function DashboardPage() {
         } else {
           router.push("/login");
         }
-      } catch (err) {
+      } catch {
         // console.log("Error fetching current user:", err);
         authStorage.removeToken();
         router.push("/login");
@@ -33,12 +34,14 @@ export default function DashboardPage() {
       }
     };
     currenUser();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <p className="text-lg font-medium text-slate-700">Loading...</p>
+        <p className="flex flex-col items-center gap-6 text-2xl font-medium text-blue-600">
+          <Spinner /> Loading...
+        </p>
       </main>
     );
   }
@@ -122,9 +125,11 @@ export default function DashboardPage() {
                 </button>
               </Link>
 
-              <button className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-300 transition">
-                Settings
-              </button>
+              <Link href="/dashboard/settings">
+                <button className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-300 transition">
+                  Settings
+                </button>
+              </Link>
             </div>
           </div>
         </div>
